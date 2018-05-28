@@ -1,4 +1,4 @@
-version: '2.1'
+version: '3.6'
 
 services:
   message-broker-service:
@@ -15,7 +15,6 @@ services:
       - RABBITMQ_DEFAULT_USER=rabbitmq
       - RABBITMQ_DEFAULT_PASS=rabbitmq
       - RABBITMQ_DEFAULT_VHOST=flask_base_dev
-
   redis-db:
     container_name: redis-db
     build:
@@ -52,6 +51,8 @@ services:
       - 5001:5000 # expose ports - HOST:CONTAINER
     environment:
       - APP_SETTINGS=project.config.DevelopmentConfig
+      - FLASK_DEBUG=1
+      - FLASK_APP=project/__init__.py
       - DATABASE_URL=postgres://postgres:postgres@flask-base-db:5432/flask_base_dev
       - DATABASE_TEST_URL=postgres://postgres:postgres@flask-base-db:5432/flask_base_test
       - CELERY_BROKER_URL=amqp://rabbitmq:rabbitmq@message-broker-service:5672/flask_base_dev
@@ -70,8 +71,7 @@ services:
       - MAIL_USE_SSL=${MAIL_USE_SSL}
       - FCM_SERVER_KEY=${FCM_SERVER_KEY}
     depends_on:
-      flask-base-db:
-        condition: service_healthy
+      - flask-base-db
     links:
       - flask-base-db
       - message-broker-service
@@ -84,8 +84,7 @@ services:
     ports:
       - 80:80
     depends_on:
-      flask-base-service:
-        condition: service_started
+      - flask-base-service
     links:
       - flask-base-service
 
@@ -100,6 +99,8 @@ services:
       - redis-db
     environment:
       - APP_SETTINGS=project.config.DevelopmentConfig
+      - FLASK_DEBUG=1
+      - FLASK_APP=project/__init__.py
       - DATABASE_URL=postgres://postgres:postgres@flask-base-db:5432/flask_base_dev
       - DATABASE_TEST_URL=postgres://postgres:postgres@flask-base-db:5432/flask_base_test
       - CELERY_BROKER_URL=amqp://rabbitmq:rabbitmq@message-broker-service:5672/flask_base_dev
@@ -118,11 +119,8 @@ services:
       - MAIL_USE_SSL=${MAIL_USE_SSL}
       - FCM_SERVER_KEY=${FCM_SERVER_KEY}
     depends_on:
-      message-broker-service:
-        condition: service_started
-      redis-db:
-        condition: service_started
-
+      - message-broker-service
+      - redis-db
   swagger:
     container_name: swagger
     build:
@@ -133,9 +131,7 @@ services:
     environment:
       - SWAGGER_JSON=swagger.yml
     depends_on:
-      flask-base-service:
-        condition: service_started
-
+      - flask-base-service
     links:
       - flask-base-service
 
